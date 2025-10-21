@@ -3,10 +3,10 @@
 #include <iostream>
 #include "core/Engine.hpp"
 
-int main(int argc, char* argv[]) {
-    
+int main(int argc, char* argv[]) 
+{
     Engine *engine = new Engine();
-    engine->init("Flappy Bird", 300, 800);
+    engine->init("Flappy Bird", 432, 768);
     engine->run();
     return 0;
 }

@@ -34,7 +34,9 @@
 #ifdef SDL_JOYSTICK_HIDAPI_SWITCH
 
 // Define this if you want to log all packets from the controller
-// #define DEBUG_SWITCH_PROTOCOL
+#if 0
+#define DEBUG_SWITCH_PROTOCOL
+#endif
 
 // Define this to get log output for rumble logic
 // #define DEBUG_RUMBLE
@@ -313,6 +315,8 @@ typedef struct
     Uint64 m_ulIMUUpdateIntervalNS;
     Uint64 m_ulTimestampNS;
     bool m_bVerticalMode;
+    SDL_PowerState m_ePowerState;
+    int m_nPowerPercent;
 
     SwitchInputOnlyControllerStatePacket_t m_lastInputOnlyState;
     SwitchSimpleStatePacket_t m_lastSimpleState;
@@ -957,7 +961,7 @@ static bool LoadStickCalibration(SDL_DriverSwitch_Context *ctx)
     if (user_reply && user_reply->stickUserCalibration.rgucRightMagic[0] == 0xB2 && user_reply->stickUserCalibration.rgucRightMagic[1] == 0xA1) {
         userParamsReadSuccessCount += 1;
         pRightStickCal = user_reply->stickUserCalibration.rgucRightCalibration;
-    } 
+    }
 
     // Only read the factory calibration info if we failed to receive the correct magic bytes
     if (userParamsReadSuccessCount < 2) {
@@ -1386,7 +1390,15 @@ static bool HIDAPI_DriverSwitch_IsSupportedDevice(SDL_HIDAPI_Device *device, con
         return false;
     }
 
-    return (type == SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_PRO);
+    if (type != SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_PRO) {
+        return false;
+    }
+
+    // The Nintendo Switch 2 Pro uses another driver
+    if (vendor_id == USB_VENDOR_NINTENDO && product_id == USB_PRODUCT_NINTENDO_SWITCH2_PRO) {
+        return false;
+    }
+    return true;
 }
 
 static void UpdateDeviceIdentity(SDL_HIDAPI_Device *device)
@@ -1395,7 +1407,7 @@ static void UpdateDeviceIdentity(SDL_HIDAPI_Device *device)
 
     if (ctx->m_bInputOnly) {
         if (SDL_IsJoystickGameCube(device->vendor_id, device->product_id)) {
-            device->type = SDL_GAMEPAD_TYPE_STANDARD;
+            device->type = SDL_GAMEPAD_TYPE_GAMECUBE;
         }
     } else {
         char serial[18];
@@ -1583,7 +1595,8 @@ static bool HIDAPI_DriverSwitch_OpenJoystick(SDL_HIDAPI_Device *device, SDL_Joys
             ctx->m_eControllerType != k_eSwitchDeviceInfoControllerType_NESRight &&
             ctx->m_eControllerType != k_eSwitchDeviceInfoControllerType_SNES &&
             ctx->m_eControllerType != k_eSwitchDeviceInfoControllerType_N64 &&
-            ctx->m_eControllerType != k_eSwitchDeviceInfoControllerType_SEGA_Genesis) {
+            ctx->m_eControllerType != k_eSwitchDeviceInfoControllerType_SEGA_Genesis &&
+            !(device->vendor_id == USB_VENDOR_PDP && device->product_id == USB_PRODUCT_PDP_REALMZ_WIRELESS)) {
             if (LoadIMUCalibration(ctx)) {
                 ctx->m_bSensorsSupported = true;
             }
@@ -2572,21 +2585,29 @@ static void HandleFullControllerState(SDL_Joystick *joystick, SDL_DriverSwitch_C
      * LSB of the battery nibble is used to report charging.
      * The battery level is reported from 0(empty)-8(full)
      */
-    SDL_PowerState state;
     int charging = (packet->controllerState.ucBatteryAndConnection & 0x10);
     int level = (packet->controllerState.ucBatteryAndConnection & 0xE0) >> 4;
-    int percent = (int)SDL_roundf((level / 8.0f) * 100.0f);
-
     if (charging) {
         if (level == 8) {
-            state = SDL_POWERSTATE_CHARGED;
+            ctx->m_ePowerState = SDL_POWERSTATE_CHARGED;
         } else {
-            state = SDL_POWERSTATE_CHARGING;
+            ctx->m_ePowerState = SDL_POWERSTATE_CHARGING;
         }
     } else {
-        state = SDL_POWERSTATE_ON_BATTERY;
+        ctx->m_ePowerState = SDL_POWERSTATE_ON_BATTERY;
     }
-    SDL_SendJoystickPowerInfo(joystick, state, percent);
+    ctx->m_nPowerPercent = (int)SDL_roundf((level / 8.0f) * 100.0f);
+
+    if (!ctx->device->parent) {
+        SDL_PowerState state = ctx->m_ePowerState;
+        int percent = ctx->m_nPowerPercent;
+        SDL_SendJoystickPowerInfo(joystick, state, percent);
+    } else if (ctx->m_eControllerType == k_eSwitchDeviceInfoControllerType_JoyConRight) {
+        SDL_DriverSwitch_Context *other = (SDL_DriverSwitch_Context *)ctx->device->parent->children[0]->context;
+        SDL_PowerState state = (SDL_PowerState)SDL_min(ctx->m_ePowerState, other->m_ePowerState);
+        int percent = SDL_min(ctx->m_nPowerPercent, other->m_nPowerPercent);
+        SDL_SendJoystickPowerInfo(joystick, state, percent);
+    }
 
     if (ctx->m_bReportSensors) {
         bool bHasSensorData = (packet->imuState[0].sAccelZ != 0 ||

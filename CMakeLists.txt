@@ -5,8 +5,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
-# Add SDL3 (assumes you have lib/SDL3)
+# Add SDL3 and SDL_Image
 add_subdirectory(dependencies/SDL3 EXCLUDE_FROM_ALL)
+add_subdirectory(dependencies/SDL3_image EXCLUDE_FROM_ALL)
 
 
 # ---- Source Files ----
@@ -21,14 +22,15 @@ add_executable(${PROJECT_NAME}
 
 # ---- Include Directories ----
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_SOURCE_DIR}/dependencies/SDL3/include
     ${CMAKE_SOURCE_DIR}/include
 )
+
 
 # ---- Link Libraries ----
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         SDL3::SDL3
+        SDL3_image::SDL3_image
 )
 
 # ---- Copy assets ----

@@ -418,7 +418,7 @@ static const ControllerDescription_t arrControllers[] = {
 	{ MAKE_CONTROLLER_ID( 0x20d6, 0x2012 ), k_eControllerType_XBoxOneController, "PowerA Xbox Series X Controller" },       // PowerA Xbox Series X Cuphead EnWired Controller - Mugman
 	{ MAKE_CONTROLLER_ID( 0x20d6, 0x2015 ), k_eControllerType_XBoxOneController, "PowerA Xbox Series X Controller" },       // PowerA Xbox Series X EnWired Controller - Blue Hint
 	{ MAKE_CONTROLLER_ID( 0x20d6, 0x2016 ), k_eControllerType_XBoxOneController, "PowerA Xbox Series X Controller" },       // PowerA Xbox Series X EnWired Controller - Green Hint
-	{ MAKE_CONTROLLER_ID( 0x20d6, 0x2017 ), k_eControllerType_XBoxOneController, "PowerA Xbox Series X Controller" },       // PowerA Xbox Series X EnWired Cntroller - Arctic Camo
+	{ MAKE_CONTROLLER_ID( 0x20d6, 0x2017 ), k_eControllerType_XBoxOneController, "PowerA Xbox Series X Controller" },       // PowerA Xbox Series X EnWired Controller - Arctic Camo
 	{ MAKE_CONTROLLER_ID( 0x20d6, 0x2018 ), k_eControllerType_XBoxOneController, "PowerA Xbox Series X Controller" },       // PowerA Xbox Series X EnWired Controller Arc Lightning
 	{ MAKE_CONTROLLER_ID( 0x20d6, 0x2019 ), k_eControllerType_XBoxOneController, "PowerA Xbox Series X Controller" },       // PowerA Xbox Series X EnWired Controller Royal Purple
 	{ MAKE_CONTROLLER_ID( 0x20d6, 0x201a ), k_eControllerType_XBoxOneController, "PowerA Xbox Series X Controller" },       // PowerA Xbox Series X EnWired Controller Nebula
@@ -435,7 +435,8 @@ static const ControllerDescription_t arrControllers[] = {
 	{ MAKE_CONTROLLER_ID( 0x24c6, 0x592a ), k_eControllerType_XBoxOneController, NULL },	// BDA XB1 Spectra Pro
 	{ MAKE_CONTROLLER_ID( 0x24c6, 0x791a ), k_eControllerType_XBoxOneController, NULL },	// PowerA Fusion Fight Pad
 	{ MAKE_CONTROLLER_ID( 0x2dc8, 0x2002 ), k_eControllerType_XBoxOneController, NULL },	// 8BitDo Ultimate Wired Controller for Xbox
-	{ MAKE_CONTROLLER_ID( 0x2dc8, 0x3106 ), k_eControllerType_XBoxOneController, NULL },	// 8Bitdo Ultimate Wired Controller. Windows, Android, Switch.
+	{ MAKE_CONTROLLER_ID( 0x2dc8, 0x3106 ), k_eControllerType_XBoxOneController, NULL },	// 8BitDo Ultimate Wired Controller. Windows, Android, Switch.
+	{ MAKE_CONTROLLER_ID( 0x2dc8, 0x310a ), k_eControllerType_XBoxOneController, NULL },	// 8BitDo Ultimate 2C Wireless Controller
 	{ MAKE_CONTROLLER_ID( 0x2e24, 0x0652 ), k_eControllerType_XBoxOneController, NULL },	// Hyperkin Duke
 	{ MAKE_CONTROLLER_ID( 0x2e24, 0x1618 ), k_eControllerType_XBoxOneController, NULL },	// Hyperkin Duke
 	{ MAKE_CONTROLLER_ID( 0x2e24, 0x1688 ), k_eControllerType_XBoxOneController, NULL },	// Hyperkin X91
@@ -481,10 +482,8 @@ static const ControllerDescription_t arrControllers[] = {
 	{ MAKE_CONTROLLER_ID( 0xf0d, 0xed ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
 	{ MAKE_CONTROLLER_ID( 0xf0d, 0xc0 ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
 	{ MAKE_CONTROLLER_ID( 0xe6f, 0x152 ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
-	{ MAKE_CONTROLLER_ID( 0xe6f, 0x2a7 ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
 	{ MAKE_CONTROLLER_ID( 0x46d, 0x1007 ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
 	{ MAKE_CONTROLLER_ID( 0xe6f, 0x2b8 ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
-	{ MAKE_CONTROLLER_ID( 0xe6f, 0x2a8 ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
 	{ MAKE_CONTROLLER_ID( 0x79, 0x18a1 ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
 
 	// Added from Minidumps 10-9-19
@@ -525,14 +524,7 @@ static const ControllerDescription_t arrControllers[] = {
 	{ MAKE_CONTROLLER_ID( 0xd62,	0x9a1b ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
 	{ MAKE_CONTROLLER_ID( 0xe00,	0xe00 ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
 	{ MAKE_CONTROLLER_ID( 0xe6f,	0x12a ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
-	{ MAKE_CONTROLLER_ID( 0xe6f,	0x2a1 ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
-	{ MAKE_CONTROLLER_ID( 0xe6f,	0x2a2 ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
-	{ MAKE_CONTROLLER_ID( 0xe6f,	0x2a5 ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
 	{ MAKE_CONTROLLER_ID( 0xe6f,	0x2b2 ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
-	{ MAKE_CONTROLLER_ID( 0xe6f,	0x2bd ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
-	{ MAKE_CONTROLLER_ID( 0xe6f,	0x2bf ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
-	{ MAKE_CONTROLLER_ID( 0xe6f,	0x2c0 ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
-	{ MAKE_CONTROLLER_ID( 0xe6f,	0x2c6 ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
 	{ MAKE_CONTROLLER_ID( 0xf0d,	0x97 ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
 	{ MAKE_CONTROLLER_ID( 0xf0d,	0xba ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
 	{ MAKE_CONTROLLER_ID( 0xf0d,	0xd8 ), k_eControllerType_XBoxOneController, NULL },	// Unknown Controller
@@ -549,8 +541,11 @@ static const ControllerDescription_t arrControllers[] = {
 	{ MAKE_CONTROLLER_ID( 0x05ac, 0x0002 ), k_eControllerType_AppleController, NULL },	// MFI Standard Gamepad (generic entry for iOS/tvOS)
 
     { MAKE_CONTROLLER_ID( 0x057e, 0x2006 ), k_eControllerType_SwitchJoyConLeft, NULL },    // Nintendo Switch Joy-Con (Left)
+    { MAKE_CONTROLLER_ID( 0x057e, 0x2067 ), k_eControllerType_SwitchJoyConLeft, NULL },    // Nintendo Switch 2 Joy-Con (Left)
     { MAKE_CONTROLLER_ID( 0x057e, 0x2007 ), k_eControllerType_SwitchJoyConRight, NULL },   // Nintendo Switch Joy-Con (Right)
+    { MAKE_CONTROLLER_ID( 0x057e, 0x2066 ), k_eControllerType_SwitchJoyConRight, NULL },   // Nintendo Switch 2 Joy-Con (Right)
     { MAKE_CONTROLLER_ID( 0x057e, 0x2008 ), k_eControllerType_SwitchJoyConPair, NULL },    // Nintendo Switch Joy-Con (Left+Right Combined)
+    { MAKE_CONTROLLER_ID( 0x057e, 0x2068 ), k_eControllerType_SwitchJoyConPair, NULL },    // Nintendo Switch 2 Joy-Con (Left+Right Combined)
 
     // This same controller ID is spoofed by many 3rd-party Switch controllers.
     // The ones we currently know of are:
@@ -559,6 +554,7 @@ static const ControllerDescription_t arrControllers[] = {
     // * ZhiXu Gamepad Wireless
     // * Sunwaytek Wireless Motion Controller for Nintendo Switch
 	{ MAKE_CONTROLLER_ID( 0x057e, 0x2009 ), k_eControllerType_SwitchProController, NULL },        // Nintendo Switch Pro Controller
+	{ MAKE_CONTROLLER_ID( 0x057e, 0x2069 ), k_eControllerType_SwitchProController, NULL },        // Nintendo Switch 2 Pro Controller
     //{ MAKE_CONTROLLER_ID( 0x057e, 0x2017 ), k_eControllerType_SwitchProController, NULL },        // Nintendo Online SNES Controller
     //{ MAKE_CONTROLLER_ID( 0x057e, 0x2019 ), k_eControllerType_SwitchProController, NULL },        // Nintendo Online N64 Controller
     //{ MAKE_CONTROLLER_ID( 0x057e, 0x201e ), k_eControllerType_SwitchProController, NULL },        // Nintendo Online SEGA Genesis Controller
@@ -583,6 +579,7 @@ static const ControllerDescription_t arrControllers[] = {
 	{ MAKE_CONTROLLER_ID( 0x0e6f, 0x0186 ), k_eControllerType_SwitchProController, NULL },        // PDP Afterglow Wireless Switch Controller - working gyro. USB is for charging only. Many later "Wireless" line devices w/ gyro also use this vid/pid
 	{ MAKE_CONTROLLER_ID( 0x0e6f, 0x0187 ), k_eControllerType_SwitchInputOnlyController, NULL },  // PDP Rockcandy Wired Controller
 	{ MAKE_CONTROLLER_ID( 0x0e6f, 0x0188 ), k_eControllerType_SwitchInputOnlyController, NULL },  // PDP Afterglow Wired Deluxe+ Audio Controller
+	{ MAKE_CONTROLLER_ID( 0x0e6f, 0x018c ), k_eControllerType_SwitchProController, "PDP REALMz Wireless Controller" },  // PDP REALMz Wireless Controller for Switch
 	{ MAKE_CONTROLLER_ID( 0x0f0d, 0x00aa ), k_eControllerType_SwitchInputOnlyController, NULL },  // HORI Real Arcade Pro V Hayabusa in Switch Mode
 	{ MAKE_CONTROLLER_ID( 0x20d6, 0xa711 ), k_eControllerType_SwitchInputOnlyController, NULL },  // PowerA Wired Controller Plus/PowerA Wired Controller Nintendo GameCube Style
 	{ MAKE_CONTROLLER_ID( 0x20d6, 0xa712 ), k_eControllerType_SwitchInputOnlyController, NULL },  // PowerA Nintendo Switch Fusion Fight Pad

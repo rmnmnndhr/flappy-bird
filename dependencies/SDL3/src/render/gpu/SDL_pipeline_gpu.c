@@ -27,40 +27,10 @@
 
 #include "../SDL_sysrender.h"
 
-struct GPU_PipelineCacheKeyStruct
-{
-    Uint64 blend_mode : 28;
-    Uint64 frag_shader : 4;
-    Uint64 vert_shader : 4;
-    Uint64 attachment_format : 6;
-    Uint64 primitive_type : 3;
-};
-
-typedef union GPU_PipelineCacheKeyConverter
-{
-    struct GPU_PipelineCacheKeyStruct as_struct;
-    Uint64 as_uint64;
-} GPU_PipelineCacheKeyConverter;
-
-SDL_COMPILE_TIME_ASSERT(GPU_PipelineCacheKeyConverter_Size, sizeof(GPU_PipelineCacheKeyConverter) <= sizeof(Uint64));
-
 static Uint32 SDLCALL HashPipelineCacheKey(void *userdata, const void *key)
 {
     const GPU_PipelineParameters *params = (const GPU_PipelineParameters *) key;
-    GPU_PipelineCacheKeyConverter cvt;
-    cvt.as_uint64 = 0;
-    cvt.as_struct.blend_mode = params->blend_mode;
-    cvt.as_struct.frag_shader = params->frag_shader;
-    cvt.as_struct.vert_shader = params->vert_shader;
-    cvt.as_struct.attachment_format = params->attachment_format;
-    cvt.as_struct.primitive_type = params->primitive_type;
-
-    // 64-bit uint hash function stolen from taisei (which stole it from somewhere else)
-    Uint64 x = cvt.as_uint64;
-    x = (x ^ (x >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
-    x = (x ^ (x >> 27)) * UINT64_C(0x94d049bb133111eb);
-    x = x ^ (x >> 31);
-    return (Uint32)(x & 0xffffffff);
+    return SDL_murmur3_32(params, sizeof(*params), 0);
 }
 
 static bool SDLCALL MatchPipelineCacheKey(void *userdata, const void *a, const void *b)
@@ -117,6 +87,7 @@ static SDL_GPUGraphicsPipeline *MakePipeline(SDL_GPUDevice *device, GPU_Shaders 
     pci.rasterizer_state.cull_mode = SDL_GPU_CULLMODE_NONE;
     pci.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_FILL;
     pci.rasterizer_state.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE;
+    pci.rasterizer_state.enable_depth_clip = true;
 
     SDL_GPUVertexBufferDescription vertex_buffer_desc;
     SDL_zero(vertex_buffer_desc);

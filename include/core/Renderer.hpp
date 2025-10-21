@@ -1,16 +1,28 @@
 #pragma once
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
+#include <iostream>
 
-class Renderer {
+class Renderer 
+{
 public:
-    Renderer(SDL_Window* window);
-    ~Renderer();
+    Renderer(const Renderer&) = delete;
+    Renderer& operator=(const Renderer&) = delete;
 
-    void Clear();
-    void Present();
-    void DrawRect(int x, int y, int w, int h, SDL_Color color);
+    static Renderer& getInstance(SDL_Window* window = nullptr)
+    {
+        static Renderer instance(window);
+        return instance;
+    }
+
+    void clear();
+    void present();
+    void drawRect(float x, float y, float w, float h, SDL_Color color);
+
+    SDL_Renderer* getRenderer() const { return renderer; }
 
 private:
+    explicit Renderer(SDL_Window* window);
+    ~Renderer();
+
     SDL_Renderer* renderer;
 };

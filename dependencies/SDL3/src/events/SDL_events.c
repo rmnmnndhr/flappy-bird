@@ -29,6 +29,7 @@
 #include "../audio/SDL_audio_c.h"
 #include "../camera/SDL_camera_c.h"
 #include "../timer/SDL_timer_c.h"
+#include "../core/linux/SDL_udev.h"
 #ifndef SDL_JOYSTICK_DISABLED
 #include "../joystick/SDL_joystick_c.h"
 #endif
@@ -42,6 +43,10 @@
 #include "../video/android/SDL_androidevents.h"
 #endif
 
+#ifdef SDL_PLATFORM_UNIX
+#include "../tray/SDL_tray_utils.h"
+#endif
+
 // An arbitrary limit so we don't have unbounded growth
 #define SDL_MAX_QUEUED_EVENTS 65535
 
@@ -50,6 +55,9 @@
 
 // Determines how often to pump events if joysticks or sensors are actively being read
 #define EVENT_POLL_INTERVAL_NS SDL_MS_TO_NS(1)
+
+// Determines how often to pump events if tray items are active
+#define TRAY_POLL_INTERVAL_NS SDL_MS_TO_NS(50)
 
 // Make sure the type in the SDL_Event aligns properly across the union
 SDL_COMPILE_TIME_ASSERT(SDL_Event_type, sizeof(Uint32) == sizeof(SDL_EventType));
@@ -430,25 +438,17 @@ static void SDLCALL SDL_EventLoggingChanged(void *userdata, const char *name, co
     SDL_EventLoggingVerbosity = (hint && *hint) ? SDL_clamp(SDL_atoi(hint), 0, 3) : 0;
 }
 
-static void SDL_LogEvent(const SDL_Event *event)
+int SDL_GetEventDescription(const SDL_Event *event, char *buf, int buflen)
 {
+    if (!event) {
+        return SDL_snprintf(buf, buflen, "(null)");
+    }
+
     static const char *pen_axisnames[] = { "PRESSURE", "XTILT", "YTILT", "DISTANCE", "ROTATION", "SLIDER", "TANGENTIAL_PRESSURE" };
     SDL_COMPILE_TIME_ASSERT(pen_axisnames_array_matches, SDL_arraysize(pen_axisnames) == SDL_PEN_AXIS_COUNT);
 
     char name[64];
     char details[128];
-
-    // sensor/mouse/pen/finger motion are spammy, ignore these if they aren't demanded.
-    if ((SDL_EventLoggingVerbosity < 2) &&
-        ((event->type == SDL_EVENT_MOUSE_MOTION) ||
-         (event->type == SDL_EVENT_FINGER_MOTION) ||
-         (event->type == SDL_EVENT_PEN_AXIS) ||
-         (event->type == SDL_EVENT_PEN_MOTION) ||
-         (event->type == SDL_EVENT_GAMEPAD_TOUCHPAD_MOTION) ||
-         (event->type == SDL_EVENT_GAMEPAD_SENSOR_UPDATE) ||
-         (event->type == SDL_EVENT_SENSOR_UPDATE))) {
-        return;
-    }
 
 // this is to make (void)SDL_snprintf() calls cleaner.
 #define uint unsigned int
@@ -525,6 +525,7 @@ static void SDL_LogEvent(const SDL_Event *event)
         SDL_DISPLAYEVENT_CASE(SDL_EVENT_DISPLAY_DESKTOP_MODE_CHANGED);
         SDL_DISPLAYEVENT_CASE(SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED);
         SDL_DISPLAYEVENT_CASE(SDL_EVENT_DISPLAY_CONTENT_SCALE_CHANGED);
+        SDL_DISPLAYEVENT_CASE(SDL_EVENT_DISPLAY_USABLE_BOUNDS_CHANGED);
 #undef SDL_DISPLAYEVENT_CASE
 
 #define SDL_WINDOWEVENT_CASE(x)                \
@@ -540,7 +541,6 @@ static void SDL_LogEvent(const SDL_Event *event)
         SDL_WINDOWEVENT_CASE(SDL_EVENT_WINDOW_RESIZED);
         SDL_WINDOWEVENT_CASE(SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED);
         SDL_WINDOWEVENT_CASE(SDL_EVENT_WINDOW_METAL_VIEW_RESIZED);
-        SDL_WINDOWEVENT_CASE(SDL_EVENT_WINDOW_SAFE_AREA_CHANGED);
         SDL_WINDOWEVENT_CASE(SDL_EVENT_WINDOW_MINIMIZED);
         SDL_WINDOWEVENT_CASE(SDL_EVENT_WINDOW_MAXIMIZED);
         SDL_WINDOWEVENT_CASE(SDL_EVENT_WINDOW_RESTORED);
@@ -553,6 +553,7 @@ static void SDL_LogEvent(const SDL_Event *event)
         SDL_WINDOWEVENT_CASE(SDL_EVENT_WINDOW_ICCPROF_CHANGED);
         SDL_WINDOWEVENT_CASE(SDL_EVENT_WINDOW_DISPLAY_CHANGED);
         SDL_WINDOWEVENT_CASE(SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED);
+        SDL_WINDOWEVENT_CASE(SDL_EVENT_WINDOW_SAFE_AREA_CHANGED);
         SDL_WINDOWEVENT_CASE(SDL_EVENT_WINDOW_OCCLUDED);
         SDL_WINDOWEVENT_CASE(SDL_EVENT_WINDOW_ENTER_FULLSCREEN);
         SDL_WINDOWEVENT_CASE(SDL_EVENT_WINDOW_LEAVE_FULLSCREEN);
@@ -599,6 +600,10 @@ static void SDL_LogEvent(const SDL_Event *event)
 
         SDL_EVENT_CASE(SDL_EVENT_TEXT_INPUT)
         (void)SDL_snprintf(details, sizeof(details), " (timestamp=%u windowid=%u text='%s')", (uint)event->text.timestamp, (uint)event->text.windowID, event->text.text);
+        break;
+        SDL_EVENT_CASE(SDL_EVENT_SCREEN_KEYBOARD_SHOWN)
+        break;
+        SDL_EVENT_CASE(SDL_EVENT_SCREEN_KEYBOARD_HIDDEN)
         break;
 
 #define PRINT_MOUSEDEV_EVENT(event) (void)SDL_snprintf(details, sizeof(details), " (timestamp=%u which=%u)", (uint)event->mdevice.timestamp, (uint)event->mdevice.which)
@@ -765,6 +770,20 @@ static void SDL_LogEvent(const SDL_Event *event)
         break;
 #undef PRINT_FINGER_EVENT
 
+#define PRINT_PINCH_EVENT(event)                                                                                                                      \
+    (void)SDL_snprintf(details, sizeof(details), " (timestamp=%u scale=%f)", \
+                       (uint)event->pinch.timestamp, event->pinch.scale)
+        SDL_EVENT_CASE(SDL_EVENT_PINCH_BEGIN)
+        PRINT_PINCH_EVENT(event);
+        break;
+        SDL_EVENT_CASE(SDL_EVENT_PINCH_UPDATE)
+        PRINT_PINCH_EVENT(event);
+        break;
+        SDL_EVENT_CASE(SDL_EVENT_PINCH_END)
+        PRINT_PINCH_EVENT(event);
+        break;
+#undef PRINT_PINCH_EVENT
+
 #define PRINT_PTOUCH_EVENT(event)                                                                             \
     (void)SDL_snprintf(details, sizeof(details), " (timestamp=%u windowid=%u which=%u pen_state=%u x=%g y=%g eraser=%s state=%s)", \
                        (uint)event->ptouch.timestamp, (uint)event->ptouch.windowID, (uint)event->ptouch.which, (uint)event->ptouch.pen_state, event->ptouch.x, event->ptouch.y, \
@@ -880,12 +899,46 @@ static void SDL_LogEvent(const SDL_Event *event)
         }
         break;
     }
+#undef uint
 
+    int retval = 0;
     if (name[0]) {
-        SDL_Log("SDL EVENT: %s%s", name, details);
+        retval = SDL_snprintf(buf, buflen, "%s%s", name, details);
+    } else if (buf && (buflen > 0)) {
+        *buf = '\0';
+    }
+    return retval;
+}
+
+static void SDL_LogEvent(const SDL_Event *event)
+{
+    if (!event) {
+        return;
     }
 
-#undef uint
+    // sensor/mouse/pen/finger/pinch motion are spammy, ignore these if they aren't demanded.
+    if ((SDL_EventLoggingVerbosity < 2) &&
+        ((event->type == SDL_EVENT_MOUSE_MOTION) ||
+         (event->type == SDL_EVENT_FINGER_MOTION) ||
+         (event->type == SDL_EVENT_PEN_AXIS) ||
+         (event->type == SDL_EVENT_PEN_MOTION) ||
+         (event->type == SDL_EVENT_PINCH_UPDATE) ||
+         (event->type == SDL_EVENT_GAMEPAD_AXIS_MOTION) ||
+         (event->type == SDL_EVENT_GAMEPAD_SENSOR_UPDATE) ||
+         (event->type == SDL_EVENT_GAMEPAD_TOUCHPAD_MOTION) ||
+         (event->type == SDL_EVENT_GAMEPAD_UPDATE_COMPLETE) ||
+         (event->type == SDL_EVENT_JOYSTICK_AXIS_MOTION) ||
+         (event->type == SDL_EVENT_JOYSTICK_UPDATE_COMPLETE) ||
+         (event->type == SDL_EVENT_SENSOR_UPDATE))) {
+        return;
+    }
+
+    char buf[256];
+    const int rc = SDL_GetEventDescription(event, buf, sizeof (buf));
+    SDL_assert(rc < sizeof (buf));  // if this overflows, we should make `buf` larger, but this is currently larger than the max SDL_GetEventDescription returns.
+    if (buf[0]) {
+        SDL_Log("SDL EVENT: %s", buf);
+    }
 }
 
 void SDL_StopEventLoop(void)
@@ -1106,7 +1159,7 @@ static int SDL_PeepEventsInternal(SDL_Event *events, int numevents, SDL_EventAct
             return -1;
         }
         if (action == SDL_ADDEVENT) {
-            if (!events) {
+            CHECK_PARAM(!events) {
                 SDL_UnlockMutex(SDL_EventQ.lock);
                 return SDL_InvalidParamError("events");
             }
@@ -1398,6 +1451,10 @@ bool SDL_RunOnMainThread(SDL_MainThreadCallback callback, void *userdata, bool w
 
 void SDL_PumpEventMaintenance(void)
 {
+#ifdef SDL_USE_LIBUDEV
+    SDL_UDEV_Poll();
+#endif
+
 #ifndef SDL_AUDIO_DISABLED
     SDL_UpdateAudio();
 #endif
@@ -1419,6 +1476,8 @@ void SDL_PumpEventMaintenance(void)
         SDL_UpdateJoysticks();
     }
 #endif
+
+    SDL_UpdateCursorAnimation();
 
     SDL_UpdateTrays();
 
@@ -1501,6 +1560,12 @@ static Sint64 SDL_events_get_polling_interval(void)
     }
 #endif
 
+#ifdef SDL_PLATFORM_UNIX
+    if (SDL_HasActiveTrays()) {
+        // Tray events on *nix platforms run separately from window system events, and need periodic polling
+        poll_intervalNS = SDL_min(poll_intervalNS, TRAY_POLL_INTERVAL_NS);
+    }
+#endif
     return poll_intervalNS;
 }
 
@@ -1646,6 +1711,8 @@ bool SDL_WaitEventTimeoutNS(SDL_Event *event, Sint64 timeoutNS)
 
 #ifdef SDL_PLATFORM_ANDROID
     for (;;) {
+        SDL_PumpEventsInternal(true);
+
         if (SDL_PeepEvents(event, 1, SDL_GETEVENT, SDL_EVENT_FIRST, SDL_EVENT_LAST) > 0) {
             return true;
         }
