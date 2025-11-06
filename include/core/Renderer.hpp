@@ -14,9 +14,11 @@ public:
         return instance;
     }
 
+    
     void clear();
     void present();
     void drawRect(float x, float y, float w, float h, SDL_Color color);
+    void render(SDL_Texture* tex, SDL_FRect* dstrect);
 
     SDL_Renderer* getRenderer() const { return renderer; }
 

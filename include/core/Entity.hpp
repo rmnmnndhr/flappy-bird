@@ -1,26 +1,19 @@
 #pragma once
 #include <SDL3/SDL.h>
 #include <iostream>
+#include "GameObject.hpp"
 
-class Entity {
+class Entity : public GameObject {
 public:
-    virtual ~Entity() = default;
+    bool getIsAlive() const { return isAlive; }
+    void destroy() { isAlive = false; }
 
-    virtual void update(float deltaTime) = 0;
-    virtual void draw(SDL_Renderer* renderer) = 0;
 
-    // Getters and setters
-    bool getIsAlive() const;
-    void destroy();
-
-    std::pair<float, float> getPosition() const;
-    void setPosition(float x, float y);
-
-    const SDL_FRect &getCollisionBox() const;
-    void setCollisionBox(const SDL_FRect& rect);
+    const SDL_FRect& getCollisionBox() const { return collision_box; }
+    void setCollisionBox(const SDL_FRect& rect) { collision_box = rect; }
 
 protected:
     bool isAlive = true;
-    std::pair<float, float> position = {0.0f, 0.0f};
+
     SDL_FRect collision_box = {0.0f, 0.0f, 0.0f, 0.0f};
 };

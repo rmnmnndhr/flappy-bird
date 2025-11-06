@@ -25,21 +25,34 @@ bool Engine::init(const char* title, int width, int height)
 
 
     this->renderer = &Renderer::getInstance(window);
+    this->textureManager = new TextureManager();
     running = true;
-    
 
-
-    SDL_Texture* tex = IMG_LoadTexture(this->renderer->getRenderer(), "assets/sprites/bluebird-downflap.png");
-    this->player = new Flappy(tex);
-
-
+    this->load();
     return true;
 }
 
 void Engine::update()
 {   
 
+    Uint32 currentFrameTime = SDL_GetTicks();
+    float dt = (currentFrameTime - this->lastFrameTime) / 1000.0f;
+    this->lastFrameTime = currentFrameTime;
+
     //KEY PRESED AND MOUSE CLICKS
+
+    InputManager::GetInstance().Update();
+    
+    if(InputManager::GetInstance().IsKeyReleased(SDL_SCANCODE_SPACE))
+    {
+        this->player->applyForces(Vector{0.f, -1200.f});
+    }
+    if(InputManager::GetInstance().IsKeyPressed(SDL_SCANCODE_ESCAPE)) 
+    {
+        running = false;
+    }
+
+
     SDL_Event event;
     while (SDL_PollEvent(&event)) 
     {
@@ -49,24 +62,22 @@ void Engine::update()
         }
     }
 
-    InputManager::GetInstance().Update();
-    
-    if(InputManager::GetInstance().IsMouseButtonPressed(SDL_BUTTON_LEFT))
-    {
 
-    }
-    if(InputManager::GetInstance().IsKeyPressed(SDL_SCANCODE_ESCAPE)) 
-    {
-        running = false;
-    }
+    //game
+    this->player->update(dt);
+    this->base->update(dt);
+
+
 
 }
 
 void Engine::render()
 {
     renderer->clear();
+    this->bg->draw(renderer->getRenderer());
+    this->base->draw(renderer->getRenderer());
+
     this->player->draw(renderer->getRenderer());
-    renderer->drawRect(350, 250, 100, 100, {255, 0, 0, 255});
     renderer->present();
 
 }
@@ -79,4 +90,38 @@ void Engine::run()
         this->update();
         this->render();
     }
+}
+
+
+
+bool Engine::load()
+{
+    if (!this->textureManager->load("player", "assets/sprites/bluebird-downflap.png", this->renderer->getRenderer()))
+    {
+        return false;
+    }
+
+    if (!this->textureManager->load("bg-day", "assets/sprites/background-day.png", this->renderer->getRenderer()))
+    {
+        return false;
+    }
+
+    if (!this->textureManager->load("base", "assets/sprites/base.png", this->renderer->getRenderer()))
+    {
+        return false;
+    }
+
+
+    this->player = new Flappy(this->textureManager->get("player"));
+
+
+    this->bg = new Background(this->textureManager->get("bg-day"));
+
+
+    this->base = new Base(this->textureManager->get("base"));
+
+
+
+
+    return true;
 }

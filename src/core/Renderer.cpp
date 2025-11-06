@@ -8,8 +8,9 @@ Renderer::Renderer(SDL_Window* window)
         renderer = nullptr;
         return;
     }
+    
 
-    renderer = SDL_CreateRenderer(window, SDL_GetRenderDriver(0));
+    renderer = SDL_CreateRenderer(window, "metal");
     if (!renderer)
     {
         std::cerr << "Failed to create SDL_Renderer: " << SDL_GetError() << std::endl;
@@ -41,3 +42,4 @@ void Renderer::drawRect(float x, float y, float w, float h, SDL_Color color)
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
     SDL_RenderFillRect(renderer, &rect);
 }
+
